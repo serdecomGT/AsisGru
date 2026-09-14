@@ -1,14 +1,85 @@
 ﻿@page "/"
+@using AsisGru.Models
+@using AsisGru.Services
+@inject GrupoService GrupoService
+@inject ParticipanteService ParticipanteService
+@inject CategoriaService CategoriaService
+@inject ActividadService ActividadService
+@inject AsistenciaService AsistenciaService
 
-<h1>Hello, world!</h1>
+<PageTitle>AsisGru | Inicio</PageTitle>
 
-Welcome to your new app. 
-Practicantes: 
-Daniela.
-Aide.
+<section class="page-header">
+    <div>
+        <span class="eyebrow">PANEL DE CONTROL</span>
+        <h1>Bienvenido a AsisGru</h1>
+        <p>Organiza tu grupo, registra actividades y controla la asistencia desde un solo lugar.</p>
+    </div>
+    <a class="btn btn-primary" href="/asistencias">✓ Registrar asistencia</a>
+</section>
 
-<h1>
-    ESCUELA NORMAL DE MAESTRAS DE EDUCACIÓN PARA EL HOGAR
-    "HUMBERTO MIRANDA FUENTES"
-</h1>/>
+@if (grupo is null)
+{
+    <div class="alert alert-info">
+        <strong>Comienza configurando tu grupo.</strong>
+        <span>Registra los datos generales antes de crear participantes y actividades.</span>
+        <a href="/grupo" class="btn btn-sm btn-primary">Configurar grupo</a>
+    </div>
+}
 
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">👥</div>
+        <span>Participantes</span>
+        <strong>@participantes</strong>
+        <small>registrados</small>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">▦</div>
+        <span>Categorías</span>
+        <strong>@categorias</strong>
+        <small>creadas</small>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue">▣</div>
+        <span>Actividades</span>
+        <strong>@actividades</strong>
+        <small>registradas</small>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">✓</div>
+        <span>Asistencias</span>
+        <strong>@asistencias</strong>
+        <small>registradas</small>
+    </div>
+</div>
+
+<div class="quick-grid">
+    <a class="quick-card" href="/participantes">
+        <span>👥</span><div><strong>Participantes</strong><small>Registrar y buscar integrantes</small></div>
+    </a>
+    <a class="quick-card" href="/categorias">
+        <span>▦</span><div><strong>Categorías</strong><small>Clasificar tus actividades</small></div>
+    </a>
+    <a class="quick-card" href="/actividades">
+        <span>▣</span><div><strong>Actividades</strong><small>Crear y administrar actividades</small></div>
+    </a>
+    <a class="quick-card" href="/reportes">
+        <span>▤</span><div><strong>Reportes</strong><small>Consultar estadísticas y fechas</small></div>
+    </a>
+</div>
+
+@code {
+    private MGrupo? grupo;
+    private int participantes, categorias, actividades, asistencias;
+
+    protected override async Task OnInitializedAsync()
+    {
+        grupo = await GrupoService.ObtenerAsync();
+        participantes = (await ParticipanteService.ObtenerTodosAsync()).Count(x => x.Activo);
+        categorias = (await CategoriaService.ObtenerTodosAsync()).Count(x => x.Activo);
+        actividades = (await ActividadService.ObtenerTodosAsync()).Count(x => x.Activo);
+        asistencias = await AsistenciaService.ContarAsync();
+    }
+}
+  

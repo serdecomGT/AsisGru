@@ -1,27 +1,11 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">AsisGru</a>
-    </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+﻿<nav class="nav-menu">
+    <a href="/" class="nav-link"><span>⌂</span> Inicio</a>
+    <div class="nav-section">GESTIÓN</div>
+    <a href="/grupo" class="nav-link"><span>⚙</span> Configuración del grupo</a>
+    <a href="/participantes" class="nav-link"><span>👥</span> Participantes</a>
+    <a href="/categorias" class="nav-link"><span>▦</span> Categorías</a>
+    <a href="/actividades" class="nav-link"><span>▣</span> Actividades</a>
+    <a href="/asistencias" class="nav-link"><span>✓</span> Registrar asistencia</a>
+    <div class="nav-section">ANÁLISIS</div>
+    <a href="/reportes" class="nav-link"><span>▤</span> Consultas y reportes</a>
+</nav>

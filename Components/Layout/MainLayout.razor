@@ -1,17 +1,49 @@
-﻿@inherits LayoutComponentBase
+﻿@using AsisGru.Services
+@inherits LayoutComponentBase
+@inject ThemeService ThemeService
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<div class="app-shell">
+    <header class="topbar">
+        <div class="brand">
+            <img src="images/asisgru-logo.png" alt="AsisGru" />
+            <div>
+                <strong>AsisGru</strong>
+                <small>Organiza · Registra · Avanza</small>
+            </div>
         </div>
+        <button class="theme-button" @onclick="CambiarTema" title="Cambiar tema">
+            <span>@(ThemeService.IsDark ? "☀️" : "🌙")</span>
+            <span>@(ThemeService.IsDark ? "Modo claro" : "Modo oscuro")</span>
+        </button>
+    </header>
 
-        <article class="content px-4">
+    <div class="body-area">
+        <aside class="sidebar">
+            <NavMenu />
+        </aside>
+
+        <main class="main-content">
             @Body
-        </article>
-    </main>
+        </main>
+    </div>
 </div>
+
+@code {
+    private bool initialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !initialized)
+        {
+            initialized = true;
+            await ThemeService.InitializeAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task CambiarTema()
+    {
+        await ThemeService.ToggleAsync();
+    }
+}
+
