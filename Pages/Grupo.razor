@@ -5,3 +5,80 @@
 @code {
     private Grupo grupo = new Grupo(); 
 }
+
+
+
+@page "/grupo"
+@inject GrupoService GrupoService
+
+<PageTitle>AsisGru | Configuración del grupo</PageTitle>
+
+<section class="page-header">
+    <div>
+        <span class="eyebrow">MÓDULO 1</span>
+        <h1>Configuración del grupo</h1>
+        <p>Registra los datos generales y el responsable del grupo.</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert @(error ? "alert-error" : "alert-success")">@mensaje</div>
+}
+
+<EditForm Model="@grupo" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="form-card">
+        <div class="section-title"><span>01</span> Datos generales</div>
+        <div class="form-grid">
+            <div class="field full">
+                <label>Nombre del grupo *</label>
+                <InputText class="input" @bind-Value="grupo.Nombre" />
+                <ValidationMessage For="@(() => grupo.Nombre)" />
+            </div>
+            <div class="field full">
+                <label>Descripción</label>
+                <InputTextArea class="input" @bind-Value="grupo.Descripcion" />
+            </div>
+            <div class="field">
+                <label>Responsable *</label>
+                <InputText class="input" @bind-Value="grupo.Responsable" />
+            </div>
+            <div class="field">
+                <label>Teléfono del responsable *</label>
+                <InputText class="input" @bind-Value="grupo.TelefonoResponsable" />
+            </div>
+            <div class="field full">
+                <label>Organización</label>
+                <InputText class="input" @bind-Value="grupo.Organizacion" />
+            </div>
+        </div>
+        <button class="btn btn-primary" type="submit">Guardar configuración</button>
+    </div>
+</EditForm>
+
+@code {
+    private Grupo grupo = new();
+    private string? mensaje;
+    private bool error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        grupo = await GrupoService.ObtenerAsync() ?? new Grupo();
+    }
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(grupo.Nombre) || string.IsNullOrWhiteSpace(grupo.Responsable) ||
+            string.IsNullOrWhiteSpace(grupo.TelefonoResponsable))
+        {
+            error = true;
+            mensaje = "Completa los campos obligatorios.";
+            return;
+        }
+
+        await GrupoService.GuardarAsync(grupo);
+        error = false;
+        mensaje = "La configuración del grupo se guardó correctamente.";
+    }
+}
