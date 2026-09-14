@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AsisGru.Models
 {
-    public class ReporteModels
+    public class AsistenciaParticipanteReporte  
     {
         public string Participante { get; set; } = string.Empty;
         public int Cantidad { get; set; }
