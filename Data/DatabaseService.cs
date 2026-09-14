@@ -35,7 +35,7 @@ namespace AsisGru.Data
 
         private static async Task InitializeAsync(SQLiteAsyncConnection db)
         {
-            await db.CreateTableAsync<Grupo>();
+            await db.CreateTableAsync<MGrupo>();
             await db.CreateTableAsync<Participante>();
             await db.CreateTableAsync<CategoriaActividad>();
             await db.CreateTableAsync<Actividad>();

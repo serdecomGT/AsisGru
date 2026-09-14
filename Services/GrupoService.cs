@@ -11,13 +11,13 @@ namespace AsisGru.Services
         private readonly DatabaseService _database;
         public GrupoService(DatabaseService database) => _database = database;
 
-        public async Task<Grupo?> ObtenerAsync()
+        public async Task<MGrupo?> ObtenerAsync()
         {
             var db = await _database.GetConnectionAsync();
-            return await db.Table<Grupo>().FirstOrDefaultAsync();
+            return await db.Table<MGrupo>().FirstOrDefaultAsync();
         }
 
-        public async Task GuardarAsync(Grupo grupo)
+        public async Task GuardarAsync(MGrupo grupo)
         {
             var db = await _database.GetConnectionAsync();
             if (grupo.Id == 0) await db.InsertAsync(grupo);

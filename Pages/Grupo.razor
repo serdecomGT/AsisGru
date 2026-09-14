@@ -1,15 +1,8 @@
-﻿@using AsisGru.Models
-{
-<h3>Grupo</h3>
-
-@code {
-    private Grupo grupo = new Grupo(); 
-}
-
-
-
-@page "/grupo"
-@inject GrupoService GrupoService
+﻿@page "/grupo"
+@using AsisGru.Services
+@using Microsoft.AspNetCore.Components.Web
+@* //@inject GrupoService GrupoService *@
+@using AsisGru.Models
 
 <PageTitle>AsisGru | Configuración del grupo</PageTitle>
 
@@ -58,7 +51,8 @@
 </EditForm>
 
 @code {
-    private Grupo grupo = new();
+    private MGrupo grupo = new();
+
     private string? mensaje;
     private bool error;
 

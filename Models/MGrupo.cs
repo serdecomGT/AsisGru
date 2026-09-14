@@ -5,7 +5,7 @@ using System.Text;
 
 namespace AsisGru.Models
 {
-    public class Grupo
+    public class MGrupo
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
