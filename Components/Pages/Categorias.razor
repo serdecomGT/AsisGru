@@ -1,0 +1,65 @@
+﻿@page "/categorias"
+@using AsisGru.Models
+@using AsisGru.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@inject CategoriaService CategoriaService
+
+
+<PageTitle>AsisGru | Categorías</PageTitle>
+
+<section class="page-header">
+    <div><span class="eyebrow">MÓDULO 3</span><h1>Categorías de actividad</h1><p>Clasifica las actividades para facilitar las consultas y reportes.</p></div>
+    <button class="btn btn-primary" @onclick="Nuevo">+ Nueva categoría</button>
+</section>
+
+@if (!string.IsNullOrEmpty(error)) { <div class="alert alert-error">@error</div> }
+
+@if (formulario)
+{
+    <div class="form-card">
+        <div class="section-title"><span>+</span> @(modelo.Id == 0 ? "Nueva categoría" : "Editar categoría")</div>
+        <div class="form-grid">
+            <div class="field"><label>Nombre *</label><input class="input" @bind="modelo.Nombre" /></div>
+            <div class="field"><label>Descripción</label><input class="input" @bind="modelo.Descripcion" /></div>
+            <div class="field checkbox-field"><label><input type="checkbox" @bind="modelo.Activo" /> Categoría activa</label></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" @onclick="Guardar">Guardar</button><button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button></div>
+    </div>
+}
+
+<div class="card-grid">
+@foreach (var c in categorias)
+{
+    <div class="category-card">
+        <div class="category-top"><span class="category-icon">▦</span><span class="badge @(c.Activo ? "badge-success" : "badge-muted")">@(c.Activo ? "Activa" : "Inactiva")</span></div>
+        <h3>@c.Nombre</h3>
+        <p>@(string.IsNullOrWhiteSpace(c.Descripcion) ? "Sin descripción." : c.Descripcion)</p>
+        <button class="link-button" @onclick="() => Editar(c)">Editar</button>
+    </div>
+}
+</div>
+
+@if (!categorias.Any()) { <div class="empty-state"><h3>No hay categorías</h3><p>Ejemplos: Deportivas, Educativas, Recreativas, Reuniones y Comunitarias.</p></div> }
+
+@code {
+    private List<CategoriaActividad> categorias = [];
+    private CategoriaActividad modelo = new();
+    private bool formulario;
+    private string? error;
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+    private async Task Cargar() => categorias = await CategoriaService.ObtenerTodosAsync();
+
+    private void Nuevo() { modelo = new(); error = null; formulario = true; }
+    private void Editar(CategoriaActividad c) { modelo = new() { Id = c.Id, Nombre = c.Nombre, Descripcion = c.Descripcion, Activo = c.Activo }; error = null; formulario = true; }
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(modelo.Nombre)) { error = "El nombre es obligatorio."; return; }
+        try { await CategoriaService.GuardarAsync(modelo); formulario = false; await Cargar(); }
+        catch (InvalidOperationException ex) { error = ex.Message; }
+    }
+    private void Cancelar() => formulario = false;
+}
+ 

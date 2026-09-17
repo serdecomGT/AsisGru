@@ -1,0 +1,130 @@
+﻿@page "/reportes"
+@using AsisGru.Models
+@using AsisGru.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@inject ReporteService ReporteService
+@inject CategoriaService CategoriaService
+@inject ActividadService ActividadService
+
+<PageTitle>AsisGru | Consultas y reportes</PageTitle>
+
+<section class="page-header">
+    <div><span class="eyebrow">MÓDULO 6</span><h1>Consultas y reportes</h1><p>Consulta asistencias por actividad, participante, categoría y rango de fechas.</p></div>
+</section>
+
+<div class="filter-card">
+    <div class="form-grid">
+        <div class="field"><label>Fecha inicial</label><input class="input" type="date" @bind="fechaInicio" /></div>
+        <div class="field"><label>Fecha final</label><input class="input" type="date" @bind="fechaFin" /></div>
+        <div class="field"><label>Tipo de consulta</label>
+            <select class="input" @bind="tipo">
+                <option value="actividad">Actividad específica</option>
+                <option value="categoria">Asistencia por categoría</option>
+                <option value="general">Asistencia general</option>
+                <option value="resumen">Asistentes por categoría</option>
+            </select>
+        </div>
+        @if (tipo == "actividad")
+        {
+            <div class="field"><label>Categoría</label>
+                <select class="input" @bind="categoriaId">
+                    <option value="0">Todas</option>
+                    @foreach (var c in categorias) { <option value="@c.Id">@c.Nombre</option> }
+                </select>
+            </div>
+            <div class="field"><label>Actividad</label>
+                <select class="input" @bind="actividadId">
+                    <option value="0">Todas</option>
+                    @foreach (var a in actividades) { <option value="@a.Id">@a.Nombre — @a.Fecha</option> }
+                </select>
+            </div>
+        }
+        @if (tipo == "categoria")
+        {
+            <div class="field"><label>Categoría *</label>
+                <select class="input" @bind="categoriaId">
+                    <option value="0">Selecciona una</option>
+                    @foreach (var c in categorias) { <option value="@c.Id">@c.Nombre</option> }
+                </select>
+            </div>
+        }
+    </div>
+    <button class="btn btn-primary" @onclick="Consultar">Consultar</button>
+</div>
+
+@if (!string.IsNullOrEmpty(error)) { <div class="alert alert-error">@error</div> }
+
+@if (tipo == "actividad" && resultadoActividad is not null)
+{
+    <div class="table-card">
+        <div class="table-header"><strong>Asistencia a actividad</strong><span>@resultadoActividad.Count registros</span></div>
+        <div class="table-scroll"><table><thead><tr><th>Participante</th><th>Actividad</th><th>Fecha</th><th>Estado</th></tr></thead>
+        <tbody>@foreach (var r in resultadoActividad) { <tr><td>@r.Participante</td><td>@r.Actividad</td><td>@r.Fecha</td><td><span class="badge badge-success">@r.Estado</span></td></tr>}</tbody></table></div>
+    </div>
+}
+@if (tipo == "categoria" && resultadoParticipantes is not null)
+{
+    <div class="table-card"><div class="table-header"><strong>Asistencia por categoría</strong><span>@resultadoParticipantes.Sum(x => x.Cantidad) asistencias</span></div>
+    <div class="table-scroll"><table><thead><tr><th>Participante</th><th>Cantidad de asistencias</th></tr></thead>
+    <tbody>@foreach (var r in resultadoParticipantes) { <tr><td>@r.Participante</td><td><strong>@r.Cantidad</strong></td></tr>}</tbody></table></div></div>
+}
+@if (tipo == "general" && resultadoParticipantes is not null)
+{
+    <div class="table-card"><div class="table-header"><strong>Asistencia general</strong><span>@resultadoParticipantes.Sum(x => x.Cantidad) asistencias</span></div>
+    <div class="table-scroll"><table><thead><tr><th>Participante</th><th>Total de asistencias</th></tr></thead>
+    <tbody>@foreach (var r in resultadoParticipantes) { <tr><td>@r.Participante</td><td><strong>@r.Cantidad</strong></td></tr>}</tbody></table></div></div>
+}
+@if (tipo == "resumen" && resultadoCategorias is not null)
+{
+    <div class="table-card"><div class="table-header"><strong>Asistentes por categoría</strong><span>Resumen estadístico</span></div>
+    <div class="table-scroll"><table><thead><tr><th>Categoría</th><th>Actividades</th><th>Asistencias</th><th>Participantes únicos</th></tr></thead>
+    <tbody>@foreach (var r in resultadoCategorias) { <tr><td><strong>@r.Categoria</strong></td><td>@r.Actividades</td><td>@r.Asistencias</td><td>@r.ParticipantesUnicos</td></tr>}</tbody></table></div></div>
+}
+
+@code {
+    private DateTime fechaInicio = DateTime.Today.AddDays(-30);
+    private DateTime fechaFin = DateTime.Today;
+    private string tipo = "actividad";
+    private int categoriaId;
+    private int actividadId;
+    private string? error;
+    private List<CategoriaActividad> categorias = [];
+    private List<Actividad> actividades = [];
+    private List<AsistenciaActividadReporte>? resultadoActividad;
+    private List<AsistenciaParticipanteReporte>? resultadoParticipantes;
+    private List<CategoriaReporte>? resultadoCategorias;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categorias = await CategoriaService.ObtenerTodosAsync();
+        actividades = await ActividadService.ObtenerTodosAsync();
+    }
+
+    private async Task Consultar()
+    {
+        error = null;
+        if (fechaInicio.Date > fechaFin.Date) { error = "La fecha inicial no puede ser mayor que la fecha final."; return; }
+        resultadoActividad = null; resultadoParticipantes = null; resultadoCategorias = null;
+
+        switch (tipo)
+        {
+            case "actividad":
+                resultadoActividad = await ReporteService.PorActividadAsync(
+                    fechaInicio, fechaFin,
+                    categoriaId == 0 ? null : categoriaId,
+                    actividadId == 0 ? null : actividadId);
+                break;
+            case "categoria":
+                if (categoriaId == 0) { error = "Selecciona una categoría."; return; }
+                resultadoParticipantes = await ReporteService.PorCategoriaAsync(fechaInicio, fechaFin, categoriaId);
+                break;
+            case "general":
+                resultadoParticipantes = await ReporteService.GeneralAsync(fechaInicio, fechaFin);
+                break;
+            case "resumen":
+                resultadoCategorias = await ReporteService.ResumenCategoriasAsync(fechaInicio, fechaFin);
+                break;
+        }
+    }
+}
