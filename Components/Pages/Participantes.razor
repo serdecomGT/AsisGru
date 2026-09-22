@@ -1,0 +1,127 @@
+﻿@page "/participantes"
+@using AsisGru.Models
+@using AsisGru.Services
+@inject CategoriaService CategoriaService
+@inject GrupoService GrupoService
+@inject ActividadService ActividadService
+@inject ParticipanteService ParticipanteService
+
+<PageTitle>AsisGru | Participantes</PageTitle>
+
+<section class="page-header">
+    <div><span class="eyebrow">MÓDULO 2</span><h1>Participantes</h1><p>Registra, busca y conserva el historial de los integrantes.</p></div>
+    <button class="btn btn-primary" @onclick="Nuevo">+ Nuevo participante</button>
+</section>
+
+<div class="toolbar">
+    <input class="input search" placeholder="Buscar por nombre o apellido..." @bind="busqueda" @bind:event="oninput" />
+    <select class="input compact" @bind="filtroActivo">
+        <option value="true">Activos</option>
+        <option value="false">Inactivos</option>
+        <option value="all">Todos</option>
+    </select>
+</div>
+
+@if (mostrandoFormulario)
+{
+    <div class="form-card">
+        <div class="section-title"><span>+</span> @(modelo.Id == 0 ? "Nuevo participante" : "Editar participante")</div>
+        <div class="form-grid">
+            <div class="field"><label>Nombres *</label><input class="input" @bind="modelo.Nombres" /></div>
+            <div class="field"><label>Apellidos *</label><input class="input" @bind="modelo.Apellidos" /></div>
+            <div class="field"><label>Dirección</label><input class="input" @bind="modelo.Direccion" /></div>
+            <div class="field"><label>Teléfono *</label><input class="input" @bind="modelo.Telefono" /></div>
+        </div>
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="alert alert-error">@error</div>
+        }
+        <div class="form-actions">
+            <button class="btn btn-primary" @onclick="Guardar">Guardar</button>
+            <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+        </div>
+    </div>
+}
+
+<div class="table-card">
+    <div class="table-header"><strong>@filtrados.Count() participantes</strong><span>El teléfono es obligatorio</span></div>
+    <div class="table-scroll">
+        <table>
+            <thead><tr><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>
+                @foreach (var p in filtrados)
+                {
+                    <tr>
+                        <td><strong>@p.NombreCompleto</strong></td>
+                        <td>@p.Telefono</td>
+                        <td>@(p.Direccion ?? "—")</td>
+                        <td><span class="badge @(p.Activo ? "badge-success" : "badge-muted")">@(p.Activo ? "Activo" : "Inactivo")</span></td>
+                        <td>
+                            <button class="link-button" @onclick="() => Editar(p)">Editar</button>
+                            @if (p.Activo)
+                            {
+                                <button class="link-button danger" @onclick="() => Desactivar(p)">Desactivar</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!filtrados.Any())
+        {
+            <div class="empty-state"><h3>No hay participantes</h3><p>Agrega el primer integrante del grupo.</p></div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Participante> participantes = [];
+    private Participante modelo = new();
+    private bool mostrandoFormulario;
+    private string busqueda = "";
+    private string filtroActivo = "true";
+    private string? error;
+
+    private IEnumerable<Participante> filtrados => participantes
+        .Where(p => filtroActivo == "all" || (filtroActivo == "true" ? p.Activo : !p.Activo))
+        .Where(p => string.IsNullOrWhiteSpace(busqueda) ||
+                    p.NombreCompleto.Contains(busqueda, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task Cargar() => participantes = await ParticipanteService.ObtenerTodosAsync();
+
+    private void Nuevo()
+    {
+        modelo = new Participante { Activo = true };
+        error = null; mostrandoFormulario = true;
+    }
+
+    private void Editar(Participante p)
+    {
+        modelo = new Participante { Id = p.Id, Nombres = p.Nombres, Apellidos = p.Apellidos, Direccion = p.Direccion, Telefono = p.Telefono, GrupoId = p.GrupoId, Activo = p.Activo };
+        error = null; mostrandoFormulario = true;
+    }
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(modelo.Nombres) || string.IsNullOrWhiteSpace(modelo.Apellidos) || string.IsNullOrWhiteSpace(modelo.Telefono))
+        { error = "Nombres, apellidos y teléfono son obligatorios."; return; }
+
+        var grupo = await GrupoService.ObtenerAsync();
+        if (grupo is null) { error = "Primero configura el grupo."; return; }
+
+        modelo.GrupoId = grupo.Id;
+        await ParticipanteService.GuardarAsync(modelo);
+        mostrandoFormulario = false;
+        await Cargar();
+    }
+
+    private void Cancelar() => mostrandoFormulario = false;
+
+    private async Task Desactivar(Participante p)
+    {
+        await ParticipanteService.DesactivarAsync(p.Id);
+        await Cargar();
+    }
+}
