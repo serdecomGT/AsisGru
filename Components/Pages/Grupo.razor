@@ -22,61 +22,91 @@
     </div>
 }
 
-<EditForm Model="@grupo" OnValidSubmit="Guardar">
-    <DataAnnotationsValidator />
-
-    <div class="form-card">
-        <div class="section-title">
-            <span>01</span> Datos generales
-        </div>
-
-        <div class="form-grid">
-
-            <div class="field full">
-                <label>Nombre del grupo *</label>
-                <InputText class="input" @bind-Value="grupo.Nombre" />
-                <ValidationMessage For="@(() => grupo.Nombre)" />
-            </div>
-
-            <div class="field full">
-                <label>Descripción</label>
-                <InputTextArea class="input" @bind-Value="grupo.Descripcion" />
-            </div>
-
-            <div class="field">
-                <label>Responsable *</label>
-                <InputText class="input" @bind-Value="grupo.Responsable" />
-                <ValidationMessage For="@(() => grupo.Responsable)" />
-            </div>
-
-            <div class="field">
-                <label>Teléfono del responsable *</label>
-                <InputText class="input" @bind-Value="grupo.TelefonoResponsable" />
-                <ValidationMessage For="@(() => grupo.TelefonoResponsable)" />
-            </div>
-
-            <div class="field full">
-                <label>Organización</label>
-                <InputText class="input" @bind-Value="grupo.Organizacion" />
-            </div>
-
-        </div>
-
-        <button class="btn btn-primary" type="submit">
-            Guardar configuración
-        </button>
-    </div>
-</EditForm>
-
-@if (grupoGuardado)
+@if (!grupoGuardado || editando)
 {
-    <div class="table-card" style="margin-top: 24px;">
+    <EditForm Model="@grupo" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
 
-        <div class="table-header">
-            <strong>Información del grupo</strong>
-            <span>Configuración guardada</span>
+        <div class="form-card">
+
+            <div class="section-title">
+                <span>01</span> Datos generales
+            </div>
+
+            <div class="form-grid">
+
+                <div class="field full">
+                    <label>Nombre del grupo *</label>
+                    <InputText class="input"
+                               @bind-Value="grupo.Nombre" />
+                    <ValidationMessage For="@(() => grupo.Nombre)" />
+                </div>
+
+                <div class="field full">
+                    <label>Descripción</label>
+                    <InputTextArea class="input"
+                                   @bind-Value="grupo.Descripcion" />
+                </div>
+
+                <div class="field">
+                    <label>Responsable *</label>
+                    <InputText class="input"
+                               @bind-Value="grupo.Responsable" />
+                    <ValidationMessage For="@(() => grupo.Responsable)" />
+                </div>
+
+                <div class="field">
+                    <label>Teléfono del responsable *</label>
+                    <InputText class="input"
+                               @bind-Value="grupo.TelefonoResponsable" />
+                    <ValidationMessage For="@(() => grupo.TelefonoResponsable)" />
+                </div>
+
+                <div class="field full">
+                    <label>Organización</label>
+                    <InputText class="input"
+                               @bind-Value="grupo.Organizacion" />
+                </div>
+
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" type="submit">
+                    Guardar configuración
+                </button>
+
+                @if (editando)
+                {
+                    <button class="btn btn-secondary"
+                            type="button"
+                            @onclick="CancelarEdicion">
+                        Cancelar
+                    </button>
+                }
+            </div>
+
         </div>
+    </EditForm>
+}
 
+<!-- INFORMACIÓN GUARDADA -->
+<div class="table-card">
+
+    <div class="table-header">
+        <strong>Información del grupo</strong>
+
+        @if (grupoGuardado)
+        {
+            <span>Configuración guardada</span>
+        }
+        else
+        {
+            <span>Sin configuración</span>
+        }
+    </div>
+
+    @if (grupoGuardado && !editando)
+    {
         <div class="form-grid">
 
             <div class="field">
@@ -120,14 +150,34 @@
 
         </div>
 
-    </div>
-}
+        <div class="form-actions">
+            <button class="btn btn-primary"
+                    @onclick="EditarConfiguracion">
+                Editar configuración
+            </button>
+        </div>
+    }
+    else if (!grupoGuardado)
+    {
+        <div class="empty-state">
+            <h3>No hay información registrada</h3>
+            <p>
+                Ingresa los datos del grupo en el formulario
+                y presiona "Guardar configuración".
+            </p>
+        </div>
+    }
+
+</div>
 
 @code {
+
     private MGrupo grupo = new();
+
     private string? mensaje;
     private bool error;
     private bool grupoGuardado;
+    private bool editando;
 
     protected override async Task OnInitializedAsync()
     {
@@ -137,6 +187,7 @@
         {
             grupo = grupoExistente;
             grupoGuardado = true;
+            editando = false;
         }
     }
 
@@ -148,7 +199,6 @@
         {
             error = true;
             mensaje = "Completa los campos obligatorios.";
-            grupoGuardado = false;
             return;
         }
 
@@ -157,15 +207,35 @@
         grupo.TelefonoResponsable = grupo.TelefonoResponsable.Trim();
 
         if (!string.IsNullOrWhiteSpace(grupo.Descripcion))
+        {
             grupo.Descripcion = grupo.Descripcion.Trim();
+        }
 
         if (!string.IsNullOrWhiteSpace(grupo.Organizacion))
+        {
             grupo.Organizacion = grupo.Organizacion.Trim();
+        }
 
         await GrupoService.GuardarAsync(grupo);
 
+        grupoGuardado = true;
+        editando = false;
+
         error = false;
         mensaje = "La configuración del grupo se guardó correctamente.";
-        grupoGuardado = true;
+    }
+
+    private void EditarConfiguracion()
+    {
+        editando = true;
+        mensaje = null;
+        error = false;
+    }
+
+    private void CancelarEdicion()
+    {
+        editando = false;
+        mensaje = null;
+        error = false;
     }
 }
